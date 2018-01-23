@@ -35,8 +35,8 @@ def main():
     mnist_train_gen_f = lambda: get_mnist_batch_xs_generator(True, batch_size=100, batch_limit=12000)
 
     sda.pretrain_network_gen(mnist_train_gen_f)
-    trained_parameters = sda.finetune_parameters_gen(get_mnist_batch_generator(True, batch_size=100, batch_limit=18000),
-                                                     output_dim=10)
+    trained_parameters = sda.finetune_parameters_gen(
+        get_mnist_batch_generator(True, batch_size=100, batch_limit=18000), output_dim=10)
     transformed_filepath = "../data/mnist_test_transformed.csv"
     test_ys_filepath = "../data/mnist_test_ys.csv"
     output_filepath = "../data/mnist_pred_ys.csv"
