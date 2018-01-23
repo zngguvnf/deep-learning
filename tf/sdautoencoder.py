@@ -4,6 +4,7 @@ import tensorflow as tf
 import numpy as np
 from math import sqrt
 from utils import *
+import os
 
 __author__ = "Ken Chen"
 __copyright__ = "Copyright (C) 2016 Ken Chen, HBI Solutions, Inc."
@@ -296,7 +297,8 @@ class SDAutoencoder:
         :param filename: A string representing the save filepath.
         :return: None
         """
-        with open(filename, "ab") as file:
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
+        with open(filename, "ab+") as file:
             np.savetxt(file, data, delimiter=",")
 
     @stopwatch
