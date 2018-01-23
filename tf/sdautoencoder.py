@@ -37,19 +37,19 @@ def attach_variable_summaries(var, name, summ_list):
     """Attach statistical summaries to a tensor for tensorboard visualization."""
     with tf.name_scope("summaries"):
         mean = tf.reduce_mean(var)
-        summ_mean = tf.scalar_summary("mean/" + name, mean)
+        summ_mean = tf.summary.scalar("mean/" + name, mean)
         with tf.name_scope('stddev'):
-            stddev = tf.sqrt(tf.reduce_sum(tf.square(tf.sub(var, mean))))
-        summ_std = tf.scalar_summary('stddev/' + name, stddev)
-        summ_max = tf.scalar_summary('max/' + name, tf.reduce_max(var))
-        summ_min = tf.scalar_summary('min/' + name, tf.reduce_min(var))
-        summ_hist = tf.histogram_summary(name, var)
+            stddev = tf.sqrt(tf.reduce_sum(tf.square(tf.subtract(var, mean))))
+        summ_std = tf.summary.scalar('stddev/' + name, stddev)
+        summ_max = tf.summary.scalar('max/' + name, tf.reduce_max(var))
+        summ_min = tf.summary.scalar('min/' + name, tf.reduce_min(var))
+        summ_hist = tf.summary.histogram(name, var)
     summ_list.extend([summ_mean, summ_std, summ_max, summ_min, summ_hist])
 
 
 def attach_scalar_summary(var, name, summ_list):
     """Attach scalar summaries to a scalar."""
-    summ = tf.scalar_summary(tags=name, values=var)
+    summ = tf.summary.scalar(name, var)
     summ_list.append(summ)
 
 
@@ -88,7 +88,7 @@ def corrupt(tensor, corruption_level=0.05):
     total_samples = tf.reduce_prod(tf.shape(tensor))
     corruption_matrix = tf.multinomial(tf.log([[corruption_level, 1 - corruption_level]]), total_samples)
     corruption_matrix = tf.cast(tf.reshape(corruption_matrix, shape=tf.shape(tensor)), dtype=tf.float32)
-    return tf.mul(tensor, corruption_matrix)
+    return tf.multiply(tensor, corruption_matrix)
 
 
 """
@@ -372,7 +372,7 @@ class SDAutoencoder:
 
         Note: cross-entropy should only be used when the values are between 0 and 1."""
         if self.loss == "rmse":
-            return tf.sqrt(tf.reduce_mean(tf.square(tf.sub(labels, values))))
+            return tf.sqrt(tf.reduce_mean(tf.square(tf.subtract(labels, values))))
         elif self.loss == "cross-entropy":
             return tf.reduce_mean(-tf.reduce_sum(
                 labels * tf.log(values + epsilon) + (1 - labels) * tf.log(1 - values + epsilon), reduction_indices=[1]
@@ -483,8 +483,8 @@ class SDAutoencoder:
             sess.run(tf.initialize_all_variables())
 
             # Merge summaries and get a summary writer
-            merged = tf.merge_summary(summary_list)
-            pretrain_writer = tf.train.SummaryWriter(TENSORBOARD_LOGDIR + "/train/" + hidden_layer.name, sess.graph)
+            merged = tf.summary.merge(summary_list)
+            pretrain_writer = tf.summary.FileWriter(TENSORBOARD_LOGDIR + "/train/" + hidden_layer.name, sess.graph)
 
             step = 0
             for batch_x_original in batch_generator:
@@ -568,7 +568,7 @@ class SDAutoencoder:
                     attach_variable_summaries(y_actual, y_actual.name, summ_list=summary_list)
 
             with tf.name_scope("cross_entropy"):
-                cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(y_logits, y_actual))
+                cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits= y_logits, labels=y_actual))
                 attach_scalar_summary(cross_entropy, "cross_entropy", summ_list=summary_list)
 
             trainable_vars = self.get_all_variables(additional_vars=[W, b])
@@ -584,8 +584,8 @@ class SDAutoencoder:
             sess.run(tf.initialize_all_variables())
 
             # Merge summaries and get a summary writer
-            merged = tf.merge_summary(summary_list)
-            train_writer = tf.train.SummaryWriter(TENSORBOARD_LOGDIR + "/train/finetune", sess.graph)
+            merged = tf.summary.merge(summary_list)
+            train_writer = tf.summary.FileWriter(TENSORBOARD_LOGDIR + "/train/finetune", sess.graph)
 
             step = 0
             for batch_xs, batch_ys in xy_train_gen:
